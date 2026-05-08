@@ -109,7 +109,6 @@ SELECT * FROM Donor_Phone;
 CREATE TABLE BloodBank (
 BankID INT NOT NULL,
 BankName Varchar(30) NOT NULL,
-Location varchar(40) NOT NULL,
 Address varchar(40) NOT NULL,
 City Varchar(40) NOT NULL,
 TotalCapacityUnits INT NOT NULL,
@@ -118,27 +117,27 @@ PRIMARY KEY (BankID)
 
 );
 
-INSERT INTO BloodBank (BankID, BankName, Location, Address, City, TotalCapacityUnits) VALUES
-(001, 'National Blood Transfusion Ctr', 'Agouza', '51 Ministry of Agriculture St', 'Giza', 5000),
-(002, 'Kasr Al-Ainy Blood Bank', 'Al Manial', 'Kasr Al-Ainy Hospital, Al Saraya St', 'Cairo', 3500),
-(003, 'Abbassia Blood Transfusion', 'Abbassia', 'Next to Abbassia Fever Hospital', 'Cairo', 3000),
-(004, 'Demerdash Hospital Bank', 'Abbassia', 'Ramses Street, Ain Shams University', 'Cairo', 2500),
-(005, 'Egyptian Red Crescent Bank', 'Nasr City', 'Youssef Abbas Street', 'Cairo', 2000),
-(006, 'Regional Blood Transfusion Ctr', 'Kom Al Dikka', 'Kom Al Dikka Square', 'Alexandria', 4000),
-(007, 'Al Miri Hospital Blood Bank', 'Mansheya', 'College of Medicine Street', 'Alexandria', 2800),
-(008, 'Tanta Regional Blood Center', 'Tanta', 'Al Baher St, Next to Governorate HQ', 'Gharbia', 2200),
-(009, 'Mansoura University Bank', 'Mansoura', 'Al Mashaya Al Sifliya Street', 'Dakahlia', 3200),
-(010, 'Assiut Regional Blood Center', 'Assiut', 'Corniche Al Nil Street', 'Assiut', 2500),
-(011, 'Sohag University Hospital Bank', 'Sohag', 'Nasr City, East of the Nile', 'Sohag', 1800),
-(012, 'Zagazig Transfusion Center', 'Zagazig', 'Sharkia Governorate Street', 'Sharkia', 2100),
-(013, 'Beni Suef University Bank', 'Beni Suef', 'East of the Nile, University Complex', 'Beni Suef', 1500),
-(014, 'Ismailia Regional Center', 'Ismailia', 'Sheikh Zayed District', 'Ismailia', 2000),
-(015, 'Minia General Hospital Bank', 'Minia', 'Al Horreya Street', 'Minia', 1700),
-(016, 'Benha University Blood Bank', 'Benha', 'Fareed Nadda Street', 'Qalyubia', 1900),
-(017, 'Port Said Transfusion Center', 'Port Said', 'Kisra and Al Geish Street', 'Port Said', 1600),
-(018, 'Shebin El Kom Blood Bank', 'Shebin El Kom', 'Gamal Abdel Nasser Street', 'Menofia', 2000),
-(019, 'Luxor Regional Blood Center', 'Luxor', 'Television Street', 'Luxor', 1400),
-(020, 'Aswan University Hospital Bank', 'Aswan', 'Al Sadat Road', 'Aswan', 1500);
+INSERT INTO BloodBank (BankID, BankName, Address, City, TotalCapacityUnits) VALUES
+(001, 'National Blood Transfusion Ctr', '51 Ministry of Agriculture St', 'Giza', 5000),
+(002, 'Kasr Al-Ainy Blood Bank', 'Kasr Al-Ainy Hospital, Al Saraya St', 'Cairo', 3500),
+(003, 'Abbassia Blood Transfusion', 'Next to Abbassia Fever Hospital', 'Cairo', 3000),
+(004, 'Demerdash Hospital Bank', 'Ramses Street, Ain Shams University', 'Cairo', 2500),
+(005, 'Egyptian Red Crescent Bank', 'Youssef Abbas Street', 'Cairo', 2000),
+(006, 'Regional Blood Transfusion Ctr', 'Kom Al Dikka Square', 'Alexandria', 4000),
+(007, 'Al Miri Hospital Blood Bank', 'College of Medicine Street', 'Alexandria', 2800),
+(008, 'Tanta Regional Blood Center', 'Al Baher St, Next to Governorate HQ', 'Gharbia', 2200),
+(009, 'Mansoura University Bank', 'Al Mashaya Al Sifliya Street', 'Dakahlia', 3200),
+(010, 'Assiut Regional Blood Center', 'Corniche Al Nil Street', 'Assiut', 2500),
+(011, 'Sohag University Hospital Bank', 'Nasr City, East of the Nile', 'Sohag', 1800),
+(012, 'Zagazig Transfusion Center', 'Sharkia Governorate Street', 'Sharkia', 2100),
+(013, 'Beni Suef University Bank', 'East of the Nile, University Complex', 'Beni Suef', 1500),
+(014, 'Ismailia Regional Center', 'Sheikh Zayed District', 'Ismailia', 2000),
+(015, 'Minia General Hospital Bank', 'Al Horreya Street', 'Minia', 1700),
+(016, 'Benha University Blood Bank', 'Fareed Nadda Street', 'Qalyubia', 1900),
+(017, 'Port Said Transfusion Center', 'Kisra and Al Geish Street', 'Port Said', 1600),
+(018, 'Shebin El Kom Blood Bank', 'Gamal Abdel Nasser Street', 'Menofia', 2000),
+(019, 'Luxor Regional Blood Center', 'Television Street', 'Luxor', 1400),
+(020, 'Aswan University Hospital Bank', 'Al Sadat Road', 'Aswan', 1500);
 
 SELECT * FROM BloodBank;
 
@@ -676,8 +675,24 @@ INSERT INTO TransfusionMatch (MatchID, RequestID, BankID, UnitID, MatchDate, Com
 
 SELECT * FROM TransfusionMatch;
 
+SHOW TABLES;
+
 
 SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE Donor;
+DROP TABLE Hospital;
+DROP TABLE BloodBank;
+DROP TABLE Patient;
+DROP TABLE BloodInventory;
+DROP TABLE BloodUnit;
+DROP TABLE Bank_Phone;
+DROP TABLE Hospital_Phone;
+DROP TABLE Donor_Phone;
+DROP TABLE Patient_Phone;
+DROP TABLE DonationEvent;
+DROP TABLE TransfusionRequest;
+DROP TABLE TransfusionMatch;
 
 TRUNCATE TABLE Donor;
 TRUNCATE TABLE Hospital;
