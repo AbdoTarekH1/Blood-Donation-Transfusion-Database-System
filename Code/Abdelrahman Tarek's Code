@@ -10,17 +10,42 @@ Gender ENUM('Male','Female') NOT NULL,
 BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL ,
 LastDonationDate DATE NOT NULL,
 DateOfBirth DATE NOT NULL
+
+-- The Date of Birth must be older than today's date
 CONSTRAINT Check_DateOfBirth CHECK (current_date() > DateOfBirth)
 );
 
--- Insert Donors' information to the table
+-- Created Donor_Phone table that holds Donors' Phone numbers
+CREATE TABLE Donor_Phone(
+DonorID INT NOT NULL,
+Phone_Number VARCHAR(15) NOT NULL,
+
+-- This table's primary keys is a combination between DonorID and the Phone_Number 
+PRIMARY KEY (DonorID, Phone_Number),
+
+-- DonorID is a foreign key from the Donor table that helps us know which Donor we are dealing with
+CONSTRAINT FK_DonorID FOREIGN KEY (DonorID) REFERENCES Donor(DonorID) ON DELETE CASCADE
+);
+
+-- Insert Donors' information to the Donor table
 INSERT INTO Donor VALUES 
 (001, 'Abdelrahman', 'Haggag', 'Male', 'AB+', '2024-12-06', '2006-03-24'),
 (002, 'Ahmed', 'Mazhar', 'Male', 'A+', '2024-6-02', '2004-07-29'),
 (001, 'Ahmed', 'Jabr', 'Male', 'B-', '2023-4-25', '2005-10-06');
 
+-- Insert Donors' Phone numbers to the Donor_Phone table
+INSERT INTO Donor_Phone VALUES
+(001, '+201208864464'),
+(002, '+201105487648'),
+(002, '+201058774685'),
+(003, '+201500587746'),
+(003, '+966556573075');
+
 -- View all the information in the Donor table
 SELECT * FROM Donor;
+
+-- View all the information in the Donor_Phone table
+SELECT * FROM Donor_Phone;
 
 -- Created Patient table that holds Patients' information
 CREATE TABLE Patient(
@@ -30,9 +55,25 @@ LastName VARCHAR(30) NOT NULL,
 Gender ENUM('Male','Female') NOT NULL,
 BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL ,
 DateOfBirth DATE NOT NULL,
+
+-- The Date of Birth must be older than today's date
 CONSTRAINT Check_DateOfBirth CHECK (current_date() > DateOfBirth),
+
+-- HospitalID is a foreign key from the Hospital table that tells us which Hospital we are dealing with
 HospitalID INT PRIMARY KEY NOT NULL,
 CONSTRAINT FK_HospitalID FOREIGN KEY (HospitalID) REFERENCES Hospital(HospitalID) ON DELETE CASCADE
+);
+
+-- Created Patient_Phone table that holds Patients' Phone numbers
+CREATE TABLE Patient_Phone(
+PatientID INT NOT NULL,
+Phone_Number VARCHAR(15) NOT NULL,
+
+-- This table's primary keys is a combination between DonorID and the Phone_Number
+PRIMARY KEY (PatientID, Phone_Number),
+
+-- PatientID is a foreign key from the Patient table that helps us know which Patient we are dealing with
+CONSTRAINT FK_PatientID FOREIGN KEY (PatientID) REFERENCES Patient(PatientID) ON DELETE CASCADE
 );
 
 -- Insert Patients' information to the table
@@ -41,16 +82,32 @@ INSERT INTO Patient VALUE
 (002, 'Abdelrahman', 'Nawar', 'Male', 'B-', '2005-06-29', 002),
 (003, 'Ziad', 'Zaza', 'Male', 'O+', '2000-05-14', 004);
 
+-- Insert Patients' Phone numbers to the Patient_Phone table
+INSERT INTO Patient_Phone VALUES
+(001, '+201055482144'),
+(002, '+201258792604'),
+(002, '+201002530648'),
+(003, '+201154684884');
+
 -- View all the information in the Patient table
 SELECT * FROM Patient;
+
+-- View all the information in the Patient_Phone table
+SELECT * FROM Patient_Phone;
 
 -- Created DonationEvent table that manages all the donations' records
 CREATE TABLE DonationEvent(
 DonationID INT PRIMARY KEY NOT NULL,
 DonorID INT NOT NULL,
+
+-- DonorID is a foreign key from the Donor table that tells us which Donor we are dealing with
 CONSTRAINT FK_DonorID FOREIGN KEY (DonorID) REFERENCES Donor(DonorID) ON DELETE CASCADE,
+
 BankID INT NOT NULL,
+
+-- BankID is a foreign key from the BloodBank table that tells us which Blood Bank we are dealing with
 CONSTRAINT FK_BankID FOREIGN KEY (BankID) REFERENCES BloodBank(BankID) ON DELETE CASCADE,
+
 DonationDate DATE NOT NULL,
 HemoglobinLevel FLOAT NOT NULL,
 Weight FLOAT NOT NULL
