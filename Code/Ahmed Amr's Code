@@ -31,6 +31,7 @@ INSERT INTO BloodBank (BankID, BankName, Location, Address, City, TotalCapacityU
 (018, 'Shebin El Kom Blood Bank', 'Shebin El Kom', 'Gamal Abdel Nasser Street', 'Menofia', 2000),
 (019, 'Luxor Regional Blood Center', 'Luxor', 'Television Street', 'Luxor', 1400),
 (020, 'Aswan University Hospital Bank', 'Aswan', 'Al Sadat Road', 'Aswan', 1500);
+SELECT * FROM BloodBank;
 
 -- Create the Bank_Phone table for the multivalued attribute (Bank_Phone).
 CREATE TABLE Bank_Phone (
@@ -66,6 +67,7 @@ INSERT INTO Bank_Phone (BankID, PhoneNumber) VALUES
 (018, '0133222361'), -- Benha
 (019, '0663222920'), -- Port Said
 (020, '0482222711'); -- Shebin El Kom 
+SELECT * FROM Bank_Phone;
 
 -- Create the BloodInventory table with updated constraints.
 CREATE TABLE BloodInventory (
@@ -99,6 +101,7 @@ INSERT INTO BloodInventory (BankID, BloodType, Quantatity_Available, LastUpdate)
 (018, 'A+', 60, '2026-05-02'),
 (019, 'B+', 30, '2026-05-01'),
 (020, 'O+', 90, '2026-05-04');
+SELECT * FROM BloodInventory;
 DELIMITER //
 CREATE TRIGGER After_BloodUnit_Insert
 AFTER INSERT ON BloodUnit
@@ -160,3 +163,4 @@ INSERT INTO TransfusionMatch (MatchID, RequestID, BankID, UnitID, MatchDate, Com
 (118, 518, 18, 1018, '2026-05-07', 'Compatible'),
 (119, 519, 19, 1019, '2026-05-07', 'Incompatible'),
 (120, 520, 20, 1020, '2026-05-07', 'Pending');
+SELECT * FROM TransfusionMatch;
