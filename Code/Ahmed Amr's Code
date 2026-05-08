@@ -1,35 +1,78 @@
-CREATE SCHEMA Blood_Donation_and_Transfusion_Database;
-USE Blood_Donation_and_Transfusion_Database;
-CREATE TABLE Transfusion_Match(
-MatchId INT PRIMARY KEY,
-MatchDate Date,
-RequestID INT,
-CompatibilityResult ENUM('Compatible', 'Incompatible', 'Pending') NOT NULL DEFAULT 'Pending',
-CONSTRAINT FK_Transfusion_Request FOREIGN KEY (RequestID) REFERENCES TransfusionRequest(RequestID),
-CONSTRAINT FK_Blood_Unit FOREIGN KEY (UnitID) REFERENCES BloodUnit(RequestID) 
-);
-
+-- Create the BloodBank table
 CREATE TABLE BloodBank (
-BankID INT,
-ContactID INT ,
-BankName Varchar(30),
-Location varchar(40),
-Address varchar(40),
-City Varchar(40),
-TotalCapacityUnits INT(40),
-CONSTRAINT FK_Nmber  FOREIGN KEY (ContactID) REFERENCES ContactNumber(contactID),
-CONSTRAINT FK_DonationEvent FOREIGN KEY (DonationID) REFERENCES DonationEvent(DonationID)
+BankID INT NOT NULL,
+BankName Varchar(30) NOT NULL,
+Location varchar(40) NOT NULL,
+Address varchar(40) NOT NULL,
+City Varchar(40) NOT NULL,
+TotalCapacityUnits INT(40) NOT NULL,
+
+PRIMARY KEY (BankID)
+
 );
 
-create table ContactNumber(
-ContactID int Primary key, 
-Contactnumber Varchar(11)
-);
-CREATE TABLE BloodType (
-Quantatity_Available INT,
-PRIMARY KEY(Blood_Type),
-Blood_Type ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL DEFAULT 'Pending', 
-LastUpdate Date, 
-CONSTRAINT FK_BloodBank FOREIGN KEY (BankID) REFERENCES BloodBank(BankID)
+-- Create the Bank_Phone table for the multivalued attribute (Bank_Phone).
+CREATE TABLE Bank_Phone (
+BankID INT NOT NULL,
+PhoneNumber VARCHAR(15) NOT NULL,
+    
+-- The Primary Key is a combination of both to allow one hospital to have multiple numbers
+PRIMARY KEY (BankID, PhoneNumber),
+    
+-- Foreign Key to link back to the Hospital
+CONSTRAINT FK_Bank_Phone FOREIGN KEY (BankID) 
+	REFERENCES BloodBank(BankID) ON DELETE CASCADE
 );
 
+-- Create the BloodInventory table with updated constraints.
+CREATE TABLE BloodInventory (
+BankID INT NOT NULL,
+BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL , 
+Quantatity_Available INT DEFAULT 0,
+LastUpdate Date,
+
+PRIMARY KEY(BankID, BloodType),
+
+CONSTRAINT FK_BloodBank FOREIGN KEY (BankID) REFERENCES BloodBank(BankID) ON DELETE CASCADE
+);
+
+DELIMITER //
+CREATE TRIGGER After_BloodUnit_Insert
+AFTER INSERT ON BloodUnit
+FOR EACH ROW
+BEGIN
+    UPDATE BloodInventory 
+    SET Quantatity_Available = Quantatity_Available + 1,
+        LastUpdate = CURDATE()
+    WHERE BankID = NEW.BankID 
+      AND BloodType = (SELECT BloodType FROM Donor WHERE DonorID = NEW.DonorID);
+END //
+DELIMITER ; 
+
+DELIMITER //
+CREATE TRIGGER After_BloodUnit_Delete
+AFTER DELETE ON BloodUnit
+FOR EACH ROW
+BEGIN
+    UPDATE BloodInventory 
+    SET Quantatity_Available = Quantatity_Available - 1,
+        LastUpdate = CURDATE()
+    WHERE BankID = OLD.BankID 
+      AND BloodType = (SELECT BloodType FROM Donor WHERE DonorID = OLD.DonorID);
+END //
+DELIMITER ;
+
+-- Create the TransfusionMatch table with updated constraints.
+CREATE TABLE TransfusionMatch(
+MatchID INT NOT NULL,
+RequestID INT NOT NULL,
+BankID INT NOT NULL,
+UnitID INT NOT NULL,
+MatchDate Date,
+CompatibilityResult ENUM('Compatible', 'Incompatible', 'Pending') NOT NULL DEFAULT 'Pending',
+
+PRIMARY KEY (MatchID),
+
+CONSTRAINT FK_Transfusion_Request FOREIGN KEY (RequestID) REFERENCES TransfusionRequest(RequestID) ON DELETE CASCADE,
+CONSTRAINT FK_Blood_Unit FOREIGN KEY (UnitID, BankID) REFERENCES BloodUnit(UnitID, BankID) ON DELETE CASCADE
+);
