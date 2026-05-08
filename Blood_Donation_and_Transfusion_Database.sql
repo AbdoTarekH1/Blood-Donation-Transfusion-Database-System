@@ -1,6 +1,24 @@
 CREATE SCHEMA Blood_Donation_and_Transfusion_Database;
 USE Blood_Donation_and_Transfusion_Database;
 
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS Donor;
+DROP TABLE IF EXISTS Hospital;
+DROP TABLE IF EXISTS BloodBank;
+DROP TABLE IF EXISTS Patient;
+DROP TABLE IF EXISTS BloodInventory;
+DROP TABLE IF EXISTS BloodUnit;
+DROP TABLE IF EXISTS Bank_Phone;
+DROP TABLE IF EXISTS Hospital_Phone;
+DROP TABLE IF EXISTS Donor_Phone;
+DROP TABLE IF EXISTS Patient_Phone;
+DROP TABLE IF EXISTS DonationEvent;
+DROP TABLE IF EXISTS TransfusionRequest;
+DROP TABLE IF EXISTS TransfusionMatch;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- Created Donor table that holds Donors' information
 CREATE TABLE Donor(
 DonorID INT PRIMARY KEY NOT NULL,
@@ -710,35 +728,5 @@ DELETE FROM TransfusionRequest
 WHERE Status_of_Request = 'Cancelled';
 
 -- -----------------------------------------------------------------
-SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS TransfusionMatch;
-DROP TABLE IF EXISTS TransfusionRequest;
-DROP TABLE IF EXISTS DonationEvent;
-DROP TABLE IF EXISTS Patient_Phone;
-DROP TABLE IF EXISTS Donor_Phone;
-DROP TABLE IF EXISTS Hospital_Phone;
-DROP TABLE IF EXISTS Bank_Phone;
-DROP TABLE IF EXISTS BloodUnit;
-DROP TABLE IF EXISTS BloodInventory;
-DROP TABLE IF EXISTS Patient;
-DROP TABLE IF EXISTS BloodBank;
-DROP TABLE IF EXISTS Hospital;
-DROP TABLE IF EXISTS Donor;
-
-TRUNCATE TABLE Donor;
-TRUNCATE TABLE Hospital;
-TRUNCATE TABLE BloodBank;
-TRUNCATE TABLE Patient;
-TRUNCATE TABLE BloodInventory;
-TRUNCATE TABLE BloodUnit;
-TRUNCATE TABLE Bank_Phone;
-TRUNCATE TABLE Hospital_Phone;
-TRUNCATE TABLE Donor_Phone;
-TRUNCATE TABLE Patient_Phone;
-TRUNCATE TABLE DonationEvent;
-TRUNCATE TABLE TransfusionRequest;
-TRUNCATE TABLE TransfusionMatch;
--- Also truncate Hospital table if you have one
-SET FOREIGN_KEY_CHECKS = 1;
 
