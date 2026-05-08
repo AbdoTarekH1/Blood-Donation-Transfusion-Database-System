@@ -1,5 +1,5 @@
 CREATE SCHEMA Blood_Donation_and_Transfusion_Database;
-USE Blood_Donation;
+USE Blood_Donation_and_Transfusion_Database;
 CREATE TABLE Transfusion_Match(
 MatchId INT PRIMARY KEY,
 MatchDate Date,
