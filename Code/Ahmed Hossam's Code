@@ -3,19 +3,32 @@
 CREATE SCHEMA Blood_Donation_and_Transfusion_Database;
 USE Blood_Donation_and_Transfusion_Database;
 
--- Create the Hospital table with updated constraints.
+-- Create the Hospital table 
 
 CREATE TABLE Hospital(
 HospitalID INT NOT NULL,
 HospitalName VARCHAR(150) NOT NULL,
 Address VARCHAR(255) NOT NULL,
 City VARCHAR(100) NOT NULL,
-ContactNumber VARCHAR(15) NOT NULL,
 
 -- Assign HospitalID as Primary Key.
 
-PRIMARY KEY (HospitalID),
-CONSTRAINT LIST_CityName CHECK (City IN ('Cairo', 'Giza', 'Alexandria', 'Mansoura', 'Assiut'))
+PRIMARY KEY (HospitalID)
+
+);
+
+-- Create the Hospital_Phone table for the multivalued attribute (Hospital_Phone).
+
+CREATE TABLE Hospital_Phone (
+HospitalID INT NOT NULL,
+PhoneNumber VARCHAR(15) NOT NULL,
+    
+-- The Primary Key is a combination of both to allow one hospital to have multiple numbers
+PRIMARY KEY (HospitalID, PhoneNumber),
+    
+-- Foreign Key to link back to the Hospital
+CONSTRAINT FK_Hospital_Phone FOREIGN KEY (HospitalID) 
+	REFERENCES Hospital(HospitalID) ON DELETE CASCADE
 );
 
 -- Create the BloodUnit table with updated constraints.
@@ -32,8 +45,10 @@ Status_of_Unit ENUM('Available', 'Expired', 'Reserved', 'Transfused') DEFAULT 'A
 PRIMARY KEY (UnitID , BankID),
 
 -- We have BankID , DonorID as Foreign Key.
-CONSTRAINT FK_Bank_Unit FOREIGN KEY (BankID) REFERENCES BloodBank(BankID),
-CONSTRAINT FK_Donor FOREIGN KEY (DonorID) REFERENCES Donor(DonorID),
+CONSTRAINT FK_Bank_Unit FOREIGN KEY (BankID) 
+	REFERENCES BloodBank(BankID) ON DELETE CASCADE,
+CONSTRAINT FK_Donor FOREIGN KEY (DonorID) 
+	REFERENCES Donor(DonorID) ON DELETE CASCADE,
 
 -- Ensure that the Expire is after the Collection.  
 
@@ -57,14 +72,15 @@ Status_of_Request ENUM('Pending', 'In Progress', 'Fulfilled', 'Cancelled') DEFAU
 PRIMARY KEY (RequestID),
 
 -- We have BankID , DonorID as Foreign Key.
-CONSTRAINT FK_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital(HospitalID),
-CONSTRAINT FK_Patient FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+CONSTRAINT FK_Hospital FOREIGN KEY (HospitalID) 
+	REFERENCES Hospital(HospitalID),
+CONSTRAINT FK_Patient FOREIGN KEY (PatientID) 
+	REFERENCES Patient(PatientID),
 
 -- Data Integrity: Ensure requested units is a positive number
 CONSTRAINT chk_Unit_Number_Positive CHECK (UnitsRequired > 0)
 
 );
-
 
 
 
