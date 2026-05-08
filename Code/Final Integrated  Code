@@ -677,7 +677,32 @@ SELECT * FROM TransfusionMatch;
 
 SHOW TABLES;
 
+-- JOIN 1: List all hospitals and their associated phone numbers.
+SELECT h.HospitalName, p.PhoneNumber 
+FROM Hospital h
+JOIN Hospital_Phone p ON h.HospitalID = p.HospitalID;
 
+-- JOIN 2: See which patient requested blood, their required type, and the name of the hospital making the request.
+SELECT CONCAT(p.FirstName, ' ', p.LastName) AS PatientFullName, r.RequiredBloodType, h.HospitalName
+FROM TransfusionRequest r
+JOIN Patient p ON r.PatientID = p.PatientID
+JOIN Hospital h ON r.HospitalID = h.HospitalID;
+
+-- COUNT: Find out how many "Available" blood units are currently in the entire system.
+SELECT COUNT(*) AS AvailableUnits 
+FROM BloodUnit 
+WHERE Status_of_Unit = 'Available';
+
+-- Subquery: Find the names of hospitals that have submitted "Critical" urgency requests.
+SELECT HospitalName 
+FROM Hospital 
+WHERE HospitalID IN (
+    SELECT HospitalID 
+    FROM TransfusionRequest 
+    WHERE UrgencyLevel = 'Critical'
+);
+
+-- -----------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE Donor;
