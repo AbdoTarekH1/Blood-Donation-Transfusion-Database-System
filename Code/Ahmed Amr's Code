@@ -10,6 +10,27 @@ TotalCapacityUnits INT(40) NOT NULL,
 PRIMARY KEY (BankID)
 
 );
+INSERT INTO BloodBank (BankID, BankName, Location, Address, City, TotalCapacityUnits) VALUES
+(001, 'National Blood Transfusion Ctr', 'Agouza', '51 Ministry of Agriculture St', 'Giza', 5000),
+(002, 'Kasr Al-Ainy Blood Bank', 'Al Manial', 'Kasr Al-Ainy Hospital, Al Saraya St', 'Cairo', 3500),
+(003, 'Abbassia Blood Transfusion', 'Abbassia', 'Next to Abbassia Fever Hospital', 'Cairo', 3000),
+(004, 'Demerdash Hospital Bank', 'Abbassia', 'Ramses Street, Ain Shams University', 'Cairo', 2500),
+(005, 'Egyptian Red Crescent Bank', 'Nasr City', 'Youssef Abbas Street', 'Cairo', 2000),
+(006, 'Regional Blood Transfusion Ctr', 'Kom Al Dikka', 'Kom Al Dikka Square', 'Alexandria', 4000),
+(007, 'Al Miri Hospital Blood Bank', 'Mansheya', 'College of Medicine Street', 'Alexandria', 2800),
+(008, 'Tanta Regional Blood Center', 'Tanta', 'Al Baher St, Next to Governorate HQ', 'Gharbia', 2200),
+(009, 'Mansoura University Bank', 'Mansoura', 'Al Mashaya Al Sifliya Street', 'Dakahlia', 3200),
+(010, 'Assiut Regional Blood Center', 'Assiut', 'Corniche Al Nil Street', 'Assiut', 2500),
+(011, 'Sohag University Hospital Bank', 'Sohag', 'Nasr City, East of the Nile', 'Sohag', 1800),
+(012, 'Zagazig Transfusion Center', 'Zagazig', 'Sharkia Governorate Street', 'Sharkia', 2100),
+(013, 'Beni Suef University Bank', 'Beni Suef', 'East of the Nile, University Complex', 'Beni Suef', 1500),
+(014, 'Ismailia Regional Center', 'Ismailia', 'Sheikh Zayed District', 'Ismailia', 2000),
+(015, 'Minia General Hospital Bank', 'Minia', 'Al Horreya Street', 'Minia', 1700),
+(016, 'Benha University Blood Bank', 'Benha', 'Fareed Nadda Street', 'Qalyubia', 1900),
+(017, 'Port Said Transfusion Center', 'Port Said', 'Kisra and Al Geish Street', 'Port Said', 1600),
+(018, 'Shebin El Kom Blood Bank', 'Shebin El Kom', 'Gamal Abdel Nasser Street', 'Menofia', 2000),
+(019, 'Luxor Regional Blood Center', 'Luxor', 'Television Street', 'Luxor', 1400),
+(020, 'Aswan University Hospital Bank', 'Aswan', 'Al Sadat Road', 'Aswan', 1500);
 
 -- Create the Bank_Phone table for the multivalued attribute (Bank_Phone).
 CREATE TABLE Bank_Phone (
@@ -23,6 +44,28 @@ PRIMARY KEY (BankID, PhoneNumber),
 CONSTRAINT FK_Bank_Phone FOREIGN KEY (BankID) 
 	REFERENCES BloodBank(BankID) ON DELETE CASCADE
 );
+INSERT INTO Bank_Phone (BankID, PhoneNumber) VALUES
+(001, '0223912143'), -- National Blood Transfusion Ctr
+(002, '01001234567'),
+(003, '0223646361'), -- Kasr Al-Ainy
+(004, '0223654060'),
+(005, '0226844360'), -- Abbassia
+(006, '0224821911'), -- Demerdash
+(006, '0226703106'), -- Red Crescent
+(007, '034847361'),  -- Alexandria Regional
+(008, '034847362'),
+(009, '034862244'),  -- Al Miri Hospital
+(010, '0403334053'), -- Tanta
+(011, '0502202022'), -- Mansoura University
+(012, '0882332208'), -- Assiut
+(013, '0934601744'), -- Sohag
+(014, '0552304866'), -- Zagazig
+(015, '0822245020'), -- Beni Suef
+(016, '0643206944'), -- Ismailia
+(017, '0862342500'), -- Minia
+(018, '0133222361'), -- Benha
+(019, '0663222920'), -- Port Said
+(020, '0482222711'); -- Shebin El Kom 
 
 -- Create the BloodInventory table with updated constraints.
 CREATE TABLE BloodInventory (
@@ -35,7 +78,27 @@ PRIMARY KEY(BankID, BloodType),
 
 CONSTRAINT FK_BloodBank FOREIGN KEY (BankID) REFERENCES BloodBank(BankID) ON DELETE CASCADE
 );
-
+INSERT INTO BloodInventory (BankID, BloodType, Quantatity_Available, LastUpdate) VALUES
+(001, 'A+', 50, '2026-05-01'),
+(002, 'O-', 12, '2026-05-02'),
+(003, 'B+', 35, '2026-05-01'),
+(004, 'AB+', 10, '2026-05-03'),
+(005, 'A-', 20, '2026-05-01'),
+(006, 'O+', 100, '2026-04-28'),
+(007, 'B-', 8, '2026-05-01'),
+(008, 'AB-', 5, '2026-05-02'),
+(009, 'A+', 45, '2026-05-01'),
+(010, 'O-', 15, '2026-05-04'),
+(011, 'B+', 25, '2026-05-01'),
+(012, 'O+', 80, '2026-05-03'),
+(013, 'AB+', 12, '2026-05-01'),
+(014, 'A-', 18, '2026-05-02'),
+(015, 'B-', 7, '2026-05-01'),
+(016, 'O-', 20, '2026-05-05'),
+(017, 'AB-', 4, '2026-05-01'),
+(018, 'A+', 60, '2026-05-02'),
+(019, 'B+', 30, '2026-05-01'),
+(020, 'O+', 90, '2026-05-04');
 DELIMITER //
 CREATE TRIGGER After_BloodUnit_Insert
 AFTER INSERT ON BloodUnit
@@ -76,3 +139,24 @@ PRIMARY KEY (MatchID),
 CONSTRAINT FK_Transfusion_Request FOREIGN KEY (RequestID) REFERENCES TransfusionRequest(RequestID) ON DELETE CASCADE,
 CONSTRAINT FK_Blood_Unit FOREIGN KEY (UnitID, BankID) REFERENCES BloodUnit(UnitID, BankID) ON DELETE CASCADE
 );
+INSERT INTO TransfusionMatch (MatchID, RequestID, BankID, UnitID, MatchDate, CompatibilityResult) VALUES
+(101, 501, 1, 1001, '2026-05-01', 'Compatible'),
+(102, 502, 2, 1002, '2026-05-01', 'Compatible'),
+(103, 503, 3, 1003, '2026-05-02', 'Incompatible'),
+(104, 504, 4, 1004, '2026-05-02', 'Pending'),
+(105, 505, 5, 1005, '2026-05-02', 'Compatible'),
+(106, 506, 6, 1006, '2026-05-03', 'Compatible'),
+(107, 507, 7, 1007, '2026-05-03', 'Incompatible'),
+(108, 508, 8, 1008, '2026-05-03', 'Pending'),
+(109, 509, 9, 1009, '2026-05-04', 'Compatible'),
+(110, 510, 10, 1010, '2026-05-04', 'Compatible'),
+(111, 511, 11, 1011, '2026-05-04', 'Incompatible'),
+(112, 512, 12, 1012, '2026-05-05', 'Pending'),
+(113, 513, 13, 1013, '2026-05-05', 'Compatible'),
+(114, 514, 14, 1014, '2026-05-05', 'Compatible'),
+(115, 515, 15, 1015, '2026-05-06', 'Incompatible'),
+(116, 516, 16, 1016, '2026-05-06', 'Pending'),
+(117, 517, 17, 1017, '2026-05-06', 'Compatible'),
+(118, 518, 18, 1018, '2026-05-07', 'Compatible'),
+(119, 519, 19, 1019, '2026-05-07', 'Incompatible'),
+(120, 520, 20, 1020, '2026-05-07', 'Pending');
