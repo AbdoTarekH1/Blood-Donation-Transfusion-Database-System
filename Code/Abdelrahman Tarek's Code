@@ -10,9 +10,6 @@ Gender ENUM('Male','Female') NOT NULL,
 BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL ,
 LastDonationDate DATE NOT NULL,
 DateOfBirth DATE NOT NULL
-
--- The Date of Birth must be older than today's date
-CONSTRAINT Check_DateOfBirth CHECK (current_date() > DateOfBirth)
 );
 
 -- Created Donor_Phone table that holds Donors' Phone numbers
@@ -55,9 +52,6 @@ LastName VARCHAR(30) NOT NULL,
 Gender ENUM('Male','Female') NOT NULL,
 BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL ,
 DateOfBirth DATE NOT NULL,
-
--- The Date of Birth must be older than today's date
-CONSTRAINT Check_DateOfBirth CHECK (current_date() > DateOfBirth),
 
 -- HospitalID is a foreign key from the Hospital table that tells us which Hospital we are dealing with
 HospitalID INT PRIMARY KEY NOT NULL,
