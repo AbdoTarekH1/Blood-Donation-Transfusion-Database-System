@@ -17,6 +17,33 @@ PRIMARY KEY (HospitalID)
 
 );
 
+-- Insert Hospitals' information to the Hospital table
+INSERT INTO Hospital VALUES 
+(001, 'Al Salam International Hospital', 'Corniche El Nil, Maadi', 'Cairo'),
+(002, 'Dar Al Fouad Hospital', '26th of July Corridor, 6th of October City', 'Giza'),
+(003, 'Andalusia Hospital Smouha', 'Smouha, Victor Emanuel Square', 'Alexandria'),
+(004, 'As-Salam International Hospital', 'Corniche El Nil', 'Cairo'),
+(005, 'Cleopatra Hospital', '39 Cleopatra Street, Heliopolis', 'Cairo'),
+(006, 'Saudi German Hospital', 'Joseph Tito St, El Nozha', 'Cairo'),
+(007, 'Magdi Yacoub Heart Foundation', 'Aswan Square', 'Aswan'),
+(008, 'El Gezira Hospital', '12 Mohamed Anis St, Zamalek', 'Cairo'),
+(009, 'International Medical Center', 'Cairo-Ismailia Desert Road', 'Cairo'),
+(10, 'Children’s Cancer Hospital Egypt 57357', '1 Seket Al-Imam, El-Sayeda Zeinab', 'Cairo'),
+(011, 'Mowasat Hospital', 'Horreya Road, Hadara', 'Alexandria'),
+(012, 'Mansoura University Hospital', 'Gomhouria St', 'Mansoura'),
+(013, 'Suez Canal University Hospital', 'Ring Road', 'Ismailia'),
+(014, 'Nile Badrawi Hospital', 'Corniche El Maadi', 'Cairo'),
+(015, 'Air Force Specialized Hospital', '90th North St, Fifth Settlement', 'Cairo'),
+(016, 'Wadi El Neel Hospital', 'Hadayek El Kobba', 'Cairo'),
+(017, 'Prime Health Medical Center', 'New Cairo', 'Cairo'),
+(018, 'Alexandria Medical Center', '14 May Bridge Road, Smouha', 'Alexandria'),
+(019, 'Borg Al Arab University Hospital', 'New Borg El Arab', 'Alexandria'),
+(020, 'Tanta University Hospital', 'El-Geish Street', 'Tanta');
+
+-- View all the information in the Donor table
+SELECT * FROM Hospital;
+
+
 -- Create the Hospital_Phone table for the multivalued attribute (Hospital_Phone).
 
 CREATE TABLE Hospital_Phone (
@@ -30,6 +57,35 @@ PRIMARY KEY (HospitalID, PhoneNumber),
 CONSTRAINT FK_Hospital_Phone FOREIGN KEY (HospitalID) 
 	REFERENCES Hospital(HospitalID) ON DELETE CASCADE
 );
+
+-- Insert Hospital_Phone_Numbers' information to the Hospital_Phone table
+INSERT INTO Hospital_Phone VALUES 
+(001, '02-25550101'),
+(001, '19101'),
+(002, '02-35550202'),
+(003, '03-45550303'),
+(004, '010-12345678'),
+(005, '011-23456789'),
+(006, '012-34567890'),
+(007, '015-45678901'),
+(007, '02-27778888'),
+(008, '03-58880808'),
+(009, '050-2345090'),
+(010, '040-3344110'),
+(011, '088-2111222'),
+(012, '097-3111333'),
+(013, '064-3222444'),
+(014, '062-3333555'),
+(015, '066-3444666'),
+(016, '010-98765432'),
+(017, '012-87654321'),
+(018, '16118'),
+(019, '02-29991111'),
+(020, '011-55554444');
+
+-- View all the information in the Donor table
+SELECT * FROM Hospital_Phone;
+
 
 -- Create the BloodUnit table with updated constraints.
 
@@ -55,6 +111,32 @@ CONSTRAINT FK_Donor FOREIGN KEY (DonorID)
 CONSTRAINT chk_dates CHECK (ExpiryDate > CollectionDate)
 
 );
+-- Insert BloodUnits' information to the BloodUnit table
+INSERT INTO BloodUnit  VALUES
+(001, 001, 001, '2026-04-15', '2026-05-27', 'Available'),
+(002, 001, 002, '2026-04-16', '2026-05-28', 'Available'),
+(003, 002, 003, '2026-03-20', '2026-05-01', 'Expired'),
+(004, 002, 004, '2026-04-20', '2026-06-01', 'Available'),
+(005, 003, 005, '2026-04-25', '2026-06-06', 'Reserved'),
+(006, 003, 006, '2026-04-26', '2026-06-07', 'Available'),
+(007, 004, 007, '2025-12-01', '2026-01-12', 'Transfused'),
+(008, 004, 008, '2026-05-01', '2026-06-12', 'Available'),
+(009, 005, 009, '2026-05-02', '2026-06-13', 'Available'),
+(010, 005, 010, '2026-03-10', '2026-04-21', 'Expired'),
+(011, 001, 011, '2026-04-28', '2026-06-09', 'Available'),
+(012, 001, 012, '2026-04-29', '2026-06-10', 'Available'),
+(013, 002, 013, '2026-04-30', '2026-06-11', 'Reserved'),
+(014, 002, 014, '2026-05-03', '2026-06-14', 'Available'),
+(015, 003, 015, '2026-01-15', '2026-02-26', 'Transfused'),
+(016, 003, 016, '2026-05-04', '2026-06-15', 'Available'),
+(017, 004, 017, '2026-05-05', '2026-06-16', 'Available'),
+(018, 004, 018, '2026-05-06', '2026-06-17', 'Available'),
+(019, 005, 019, '2026-02-10', '2026-03-24', 'Expired'),
+(020, 005, 020, '2026-05-07', '2026-06-18', 'Available');
+
+-- View all the information in the BloodUnit table
+SELECT * FROM BloodUnit;
+
 
 -- Derived Attribute: Automatic Expiry Tracking (Calculated at Runtime)
 CREATE OR REPLACE VIEW View_BloodUnit_Status AS
@@ -96,6 +178,31 @@ CONSTRAINT FK_Patient FOREIGN KEY (PatientID)
 CONSTRAINT chk_Unit_Number_Positive CHECK (UnitsRequired > 0)
 
 );
+-- Insert TransfusionRequests' information to the TransfusionRequest table
+INSERT INTO TransfusionRequest VALUES
+(001, 001, 001, 'A+', 2, 'High', '2026-05-01', 'Fulfilled'),
+(002, 002, 001, 'O-', 1, 'Critical', '2026-05-02', 'Fulfilled'),
+(003, 003, 002, 'B+', 3, 'Medium', '2026-05-03', 'In Progress'),
+(004, 004, 003, 'AB-', 1, 'Low', '2026-05-03', 'Pending'),
+(005, 005, 004, 'O+', 4, 'Critical', '2026-05-04', 'Fulfilled'),
+(006, 006, 005, 'A-', 2, 'High', '2026-05-04', 'In Progress'),
+(007, 007, 006, 'B-', 2, 'Medium', '2026-05-05', 'Cancelled'),
+(008, 008, 007, 'AB+', 1, 'Low', '2026-05-05', 'Pending'),
+(009, 009, 008, 'O-', 2, 'High', '2026-05-05', 'Fulfilled'),
+(010, 010, 009, 'A+', 3, 'Critical', '2026-05-06', 'In Progress'),
+(011, 011, 010, 'B+', 1, 'Medium', '2026-05-06', 'Fulfilled'),
+(012, 012, 011, 'O+', 5, 'High', '2026-05-06', 'Pending'),
+(013, 013, 012, 'A-', 1, 'Low', '2026-05-07', 'Pending'),
+(014, 014, 013, 'AB-', 2, 'Critical', '2026-05-07', 'Fulfilled'),
+(015, 015, 014, 'B-', 3, 'High', '2026-05-07', 'In Progress'),
+(016, 016, 015, 'O+', 2, 'Medium', '2026-05-08', 'Pending'),
+(017, 017, 016, 'A+', 1, 'Low', '2026-05-08', 'Cancelled'),
+(018, 018, 017, 'AB+', 2, 'High', '2026-05-08', 'Pending'),
+(019, 019, 018, 'O-', 4, 'Critical', '2026-05-08', 'In Progress'),
+(020, 020, 019, 'B+', 2, 'Medium', '2026-05-08', 'Pending');
+
+-- View all the information in the BloodUnit table
+SELECT * FROM BloodUnit;
 
 
 
