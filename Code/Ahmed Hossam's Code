@@ -1,1 +1,70 @@
+-- Create and select the database.
+
+CREATE SCHEMA Blood_Donation_and_Transfusion_Database;
+USE Blood_Donation_and_Transfusion_Database;
+
+-- Create the Hospital table with updated constraints.
+
+CREATE TABLE Hospital(
+HospitalID INT NOT NULL,
+HospitalName VARCHAR(150) NOT NULL,
+Address VARCHAR(255) NOT NULL,
+City VARCHAR(100) NOT NULL,
+ContactNumber VARCHAR(15) NOT NULL,
+
+-- Assign HospitalID as Primary Key.
+
+PRIMARY KEY (HospitalID),
+CONSTRAINT LIST_CityName CHECK (City IN ('Cairo', 'Giza', 'Alexandria', 'Mansoura', 'Assiut'))
+);
+
+-- Create the BloodUnit table with updated constraints.
+
+CREATE TABLE BloodUnit(
+UnitID INT NOT NULL,
+BankID INT NOT NULL,
+DonorID INT NOT NULL,
+CollectionDate DATE,
+ExpiryDate Date,
+Status_of_Unit ENUM('Available', 'Expired', 'Reserved', 'Transfused') DEFAULT 'Available',
+
+-- Assign UnitID, BankID as Primary Key.
+PRIMARY KEY (UnitID , BankID),
+
+-- We have BankID , DonorID as Foreign Key.
+CONSTRAINT FK_Bank_Unit FOREIGN KEY (BankID) REFERENCES BloodBank(BankID),
+CONSTRAINT FK_Donor FOREIGN KEY (DonorID) REFERENCES Donor(DonorID),
+
+-- Ensure that the Expire is after the Collection.  
+
+CONSTRAINT chk_dates CHECK (ExpiryDate > CollectionDate)
+
+);
+
+-- Create the TransfusionRequest table with updated constraints.
+
+CREATE TABLE TransfusionRequest(
+RequestID INT NOT NULL,
+PatientID INT NOT NULL,
+HospitalID INT NOT NULL,
+RequiredBloodType ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-') NOT NULL,
+UnitsRequired INT,
+UrgencyLevel ENUM('Low', 'Medium', 'High', 'Critical') NOT NULL,
+RequestDate DATE,
+Status_of_Request ENUM('Pending', 'In Progress', 'Fulfilled', 'Cancelled') DEFAULT 'Pending',
+
+-- Assign RequestID as Primary Key.
+PRIMARY KEY (RequestID),
+
+-- We have BankID , DonorID as Foreign Key.
+CONSTRAINT FK_Hospital FOREIGN KEY (HospitalID) REFERENCES Hospital(HospitalID),
+CONSTRAINT FK_Patient FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+
+-- Data Integrity: Ensure requested units is a positive number
+CONSTRAINT chk_Unit_Number_Positive CHECK (UnitsRequired > 0)
+
+);
+
+
+
 
