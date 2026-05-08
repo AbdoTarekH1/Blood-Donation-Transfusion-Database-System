@@ -19,10 +19,6 @@ INSERT INTO Donor VALUES
 (002, 'Ahmed', 'Mazhar', 'Male', 'A+', '2024-6-02', '2004-07-29'),
 (001, 'Ahmed', 'Jabr', 'Male', 'B-', '2023-4-25', '2005-10-06');
 
-
-SELECT TIMESTAMPDIFF(YEAR, DateOfBirth, CURDATE()) AS AGE 
-FROM Donor;
-
 -- View all the information in the Donor table
 SELECT * FROM Donor;
 
@@ -108,4 +104,3 @@ INSERT INTO DonationEvent VALUE
 
 -- View all the records in the DonationEvent table
 SELECT * FROM DonationEvent;
-
