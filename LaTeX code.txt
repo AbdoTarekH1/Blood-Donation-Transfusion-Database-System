@@ -1,0 +1,929 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{lscape}
+\usepackage{float}
+\usepackage{caption}
+
+\geometry{margin=1in}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+% SQL / code listing style
+\definecolor{codebg}{rgb}{0.97,0.97,0.97}
+\definecolor{codecomment}{rgb}{0.4,0.4,0.4}
+\definecolor{codekeyword}{rgb}{0.0,0.35,0.65}
+\definecolor{codestring}{rgb}{0.55,0.0,0.0}
+
+\lstdefinestyle{sqlstyle}{
+    backgroundcolor=\color{codebg},
+    commentstyle=\color{codecomment}\itshape,
+    keywordstyle=\color{codekeyword}\bfseries,
+    stringstyle=\color{codestring},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{gray!40},
+    language=SQL,
+    morekeywords={DELIMITER,ENUM,CURDATE,TIMESTAMPDIFF,SIGNAL,SQLSTATE,
+                  MESSAGE_TEXT,EXIT,HANDLER,SQLEXCEPTION,ROLLBACK,COMMIT,
+                  START,TRANSACTION,REPLACE,VIEW,PROCEDURE,TRIGGER,
+                  BEFORE,AFTER,FOR,EACH,ROW,BEGIN,END,DECLARE,IF,ELSEIF,
+                  THEN,CONCAT,IN,CASCADE,RESTRICT,DEFAULT,CHECK,NOT,NULL,
+                  PRIMARY,FOREIGN,KEY,REFERENCES,CONSTRAINT,ON,DELETE,
+                  CREATE,DROP,INSERT,UPDATE,SELECT,FROM,WHERE,JOIN,INTO,
+                  VALUES,SET,USE,SHOW,TABLES,SCHEMA,AUTO_INCREMENT,
+                  OR,AND,CASE,WHEN,ELSE,AS}
+}
+\lstset{style=sqlstyle}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{\thepage}
+\lhead{\small Blood Donation \& Transfusion Database System}
+\rhead{\small CSE462a -- Fundamentals of Database Systems}
+
+% ---------------------------------------------------------------
+\title{%
+  \textbf{Project Report}\\[0.4em]
+  \large Fundamentals of Database Systems (CSE462a)
+}
+\author{%
+  Ahmed Hossam Mohamed Ezz-Eldin Mohamed \quad 248141\\
+  \texttt{ahmed.hossam19@msa.edu.eg}\\[0.5em]
+  Ahmed Amr Ahmed Ismail Jabr \quad 241659\\
+  \texttt{ahmed.amr26@msa.edu.eg}\\[0.5em]
+  Abdelrahman Tarek Gamal Kilany Haggag \quad 248761\\
+  \texttt{abdelrahman.tarek15@msa.edu.eg}\\[1em]
+  \normalsize Supervised by: Dr.\ Ahmed Ayoub
+}
+\date{May 6, 2026}
+% ---------------------------------------------------------------
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+% -----------------------------------------------------------------------
+\begin{abstract}
+This document presents a detailed report on the project titled
+\textit{Blood Donation \& Transfusion Database System}.
+The report covers the problem statement, objectives, database design,
+implementation details, query optimisation, data integrity and security
+measures, results, and conclusions.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ======================================================================
+\section{Introduction}
+
+% ----------------------------------------------------------------------
+\subsection{Problem Statement}
+
+One of the major problems facing blood banks today is the inefficient
+management of blood unit inventory. The management of blood donor
+records and transfusion history often suffers from significant
+inaccuracies due to manual documentation. Human errors in recording
+blood types or cross-matching results can lead to catastrophic medical
+consequences. Moreover, without a digital tracking system, it is
+challenging to maintain an accurate history of donor eligibility and
+patient needs. This project addresses these risks by providing a
+structured digital environment that ensures data integrity and minimises
+the possibility of errors in life-saving information.
+
+% ----------------------------------------------------------------------
+\subsection{Objectives}
+
+The primary objective of this project is to develop a robust relational
+database that streamlines the entire blood donation life cycle. The
+system is designed to achieve the 3\textsuperscript{rd} Normal Form
+(3NF) to ensure data efficiency and eliminate redundancy. Key goals
+include implementing advanced SQL features such as stored procedures for
+donor matching and complex queries for inventory tracking. By focusing
+on database performance and integrity, the project aims to provide a
+reliable tool for healthcare administrators to manage life-saving
+resources.
+
+% ----------------------------------------------------------------------
+\subsection{Scope}
+
+The system covers the full operational workflow of a blood bank
+network: donor registration and eligibility verification, physical
+blood unit tracking (collection through transfusion), hospital request
+management, real-time inventory maintenance, and automated
+compatibility matching. The scope is limited to a relational MySQL
+database and does not include a front-end application layer, although
+the schema is designed to support one in the future.
+
+% ======================================================================
+\section{Database Design}
+
+% ----------------------------------------------------------------------
+\subsection{Entity-Relationship Diagram (ERD)}
+
+The ERD captures twelve entities and their relationships. The major
+entities are \textbf{Donor}, \textbf{BloodBank}, \textbf{Hospital},
+\textbf{Patient}, \textbf{BloodUnit}, \textbf{BloodInventory},
+\textbf{DonationEvent}, \textbf{TransfusionRequest}, and
+\textbf{TransfusionMatch}. Phone numbers for donors, banks, hospitals,
+and patients are modelled as separate weak entities
+(\textbf{Donor\_Phone}, \textbf{Bank\_Phone}, \textbf{Hospital\_Phone},
+\textbf{Patient\_Phone}) to satisfy 1NF.
+
+Key relationships include:
+\begin{itemize}[leftmargin=2em]
+    \item A \textbf{Donor} donates in one or more \textbf{DonationEvent}s,
+          each linked to a \textbf{BloodBank}.
+    \item Each \textbf{DonationEvent} produces a \textbf{BloodUnit} stored
+          at a \textbf{BloodBank}.
+    \item A \textbf{Hospital} raises \textbf{TransfusionRequest}s on behalf
+          of its \textbf{Patient}s.
+    \item A \textbf{TransfusionMatch} resolves a request by pairing it with
+          a specific \textbf{BloodUnit}.
+    \item \textbf{BloodInventory} summarises available stock per blood type
+          at each \textbf{BloodBank}.
+\end{itemize}
+
+\begin{landscape}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{er_diagram.png}
+    \caption{Entity-Relationship Diagram (ERD) -- Blood Donation \& Transfusion Database System}
+    \label{fig:erd}
+\end{figure}
+\end{landscape}
+
+% ----------------------------------------------------------------------
+\subsection{Normalization}
+
+\subsubsection*{First Normal Form (1NF) -- Eliminating Multi-valued Attributes}
+
+We identified that the Phone Number attribute for hospitals and banks is
+multi-valued (a single institution often has multiple contact numbers).
+To comply with 1NF, these numbers were moved into separate tables:
+\textbf{Bank\_Phone} (linked via \texttt{BankID}) and
+\textbf{Hospital\_Phone} (linked via \texttt{HospitalID}).
+The same pattern was applied to donors and patients.
+
+\subsubsection*{Second Normal Form (2NF) -- Eliminating Partial Dependencies}
+
+In associative tables like \textbf{BloodInventory}, where the primary
+key is the composite (\texttt{BankID}, \texttt{BloodType}), we ensured
+that every non-key attribute depends on the \emph{complete} composite
+key. Any attribute that depends only on \texttt{BankID} (such as the
+bank's address) was kept exclusively in the parent \textbf{BloodBank}
+table.
+
+\subsubsection*{Third Normal Form (3NF) -- Eliminating Transitive and Derived Dependencies}
+
+Derived or transitively dependent attributes such as \texttt{Age} and
+\texttt{ExpiryStatus} were removed from the physical table schemas:
+
+\begin{itemize}[leftmargin=2em]
+    \item Instead of storing \texttt{Age}, we store the static
+          \texttt{DateOfBirth}. Age is calculated on-the-fly via
+          \texttt{TIMESTAMPDIFF(YEAR, DateOfBirth, CURDATE())}.
+    \item Instead of storing \texttt{ExpiryStatus}, we store the
+          \texttt{ExpiryDate}. A SQL View (\texttt{View\_BloodUnit\_Status})
+          dynamically compares this date with \texttt{CURDATE()} to report
+          the true status.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\subsection{Schema Design}
+
+The database consists of thirteen tables. Primary keys, foreign keys,
+unique constraints, and check constraints are defined using SQL DDL. A
+summary is provided below; full DDL appears in Section~\ref{sec:impl}.
+
+\begin{center}
+\begin{longtable}{@{}p{4.5cm}p{3.5cm}p{5cm}@{}}
+\toprule
+\textbf{Table} & \textbf{Primary Key} & \textbf{Notable Foreign Keys} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Table} & \textbf{Primary Key} & \textbf{Notable Foreign Keys} \\
+\midrule
+\endhead
+Donor               & DonorID                    & ---                                \\
+Donor\_Phone        & (DonorID, Phone\_Number)   & DonorID $\to$ Donor                \\
+BloodBank           & BankID                     & ---                                \\
+Bank\_Phone         & (BankID, PhoneNumber)      & BankID $\to$ BloodBank             \\
+Hospital            & HospitalID                 & ---                                \\
+Hospital\_Phone     & (HospitalID, PhoneNumber)  & HospitalID $\to$ Hospital          \\
+Patient             & (PatientID, HospitalID)    & HospitalID $\to$ Hospital          \\
+Patient\_Phone      & (PatientID, Phone\_Number) & (PatientID, HospitalID) $\to$ Patient \\
+BloodUnit           & (UnitID, BankID)           & BankID, DonorID                    \\
+BloodInventory      & (BankID, BloodType)        & BankID $\to$ BloodBank             \\
+DonationEvent       & DonationID                 & DonorID, BankID                    \\
+TransfusionRequest  & RequestID                  & PatientID+HospitalID, HospitalID   \\
+TransfusionMatch    & MatchID                    & RequestID, (UnitID, BankID)        \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{landscape}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{relational_model.png}
+    \caption{Relational Model -- Blood Donation \& Transfusion Database System}
+    \label{fig:relational}
+\end{figure}
+\end{landscape}
+
+% ======================================================================
+\section{Implementation}
+\label{sec:impl}
+
+% ----------------------------------------------------------------------
+\subsection{Database Tables}
+
+\subsubsection*{Donor}
+Stores the personal profile, blood type, and eligibility tracking (via
+last donation date) for individuals volunteering blood.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT DonorID} -- Primary Key
+    \item \texttt{VARCHAR(30) FirstName}, \texttt{VARCHAR(30) LastName}
+    \item \texttt{ENUM('Male','Female') Gender}
+    \item \texttt{ENUM('A+','A-','B+','B-','AB+','AB-','O+','O-') BloodType}
+    \item \texttt{DATE LastDonationDate}
+    \item \texttt{DATE DateOfBirth}
+\end{itemize}
+
+\begin{lstlisting}
+CREATE TABLE Donor(
+    DonorID          INT PRIMARY KEY NOT NULL,
+    FirstName        VARCHAR(30) NOT NULL,
+    LastName         VARCHAR(30) NOT NULL,
+    Gender           ENUM('Male','Female') NOT NULL,
+    BloodType        ENUM('A+','A-','B+','B-','AB+','AB-','O+','O-') NOT NULL,
+    LastDonationDate DATE NOT NULL,
+    DateOfBirth      DATE NOT NULL
+);
+\end{lstlisting}
+
+\subsubsection*{Donor\_Phone}
+A bridge table to handle multi-valued attributes, allowing a single
+donor to have multiple contact numbers.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT DonorID} -- PK, FK $\to$ Donor
+    \item \texttt{VARCHAR(15) Phone\_Number} -- PK
+\end{itemize}
+
+\begin{lstlisting}
+CREATE TABLE Donor_Phone(
+    DonorID      INT NOT NULL,
+    Phone_Number VARCHAR(15) NOT NULL,
+    PRIMARY KEY (DonorID, Phone_Number),
+    CONSTRAINT FK_Donor_Phone FOREIGN KEY (DonorID)
+        REFERENCES Donor(DonorID) ON DELETE CASCADE
+);
+\end{lstlisting}
+
+\subsubsection*{BloodBank}
+Represents physical facilities that collect and store blood.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT BankID} -- Primary Key
+    \item \texttt{VARCHAR(30) BankName}
+    \item \texttt{VARCHAR(40) Address}, \texttt{VARCHAR(40) City}
+    \item \texttt{INT TotalCapacityUnits}
+\end{itemize}
+
+\subsubsection*{Bank\_Phone}
+Stores multiple contact numbers for each blood bank.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT BankID} -- PK, FK $\to$ BloodBank
+    \item \texttt{VARCHAR(15) PhoneNumber} -- PK
+\end{itemize}
+
+\subsubsection*{Hospital}
+Tracks healthcare institutions that request blood for their patients.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT HospitalID} -- Primary Key
+    \item \texttt{VARCHAR(150) HospitalName}
+    \item \texttt{VARCHAR(255) Address}, \texttt{VARCHAR(100) City}
+\end{itemize}
+
+\subsubsection*{Hospital\_Phone}
+Stores multiple contact numbers for each hospital.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT HospitalID} -- PK, FK $\to$ Hospital
+    \item \texttt{VARCHAR(15) PhoneNumber} -- PK
+\end{itemize}
+
+\subsubsection*{Patient}
+Represents individuals receiving care. Patient is a weak entity
+identified relative to the hospital.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT PatientID}, \texttt{INT HospitalID} -- Composite PK
+    \item \texttt{VARCHAR(30) FirstName}, \texttt{VARCHAR(30) LastName}
+    \item \texttt{ENUM('Male','Female') Gender}
+    \item \texttt{ENUM BloodType}
+    \item \texttt{DATE DateOfBirth}
+\end{itemize}
+
+\subsubsection*{Patient\_Phone}
+Stores contact numbers for patients.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT PatientID}, \texttt{INT HospitalID}, \texttt{VARCHAR(15) Phone\_Number} -- Composite PK
+    \item FK $\to$ Patient(PatientID, HospitalID)
+\end{itemize}
+
+\subsubsection*{BloodUnit}
+Tracks individual physical bags of blood. Weak entity tied to a
+\texttt{BankID}.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT UnitID}, \texttt{INT BankID} -- Composite PK
+    \item \texttt{INT DonorID} -- FK $\to$ Donor
+    \item \texttt{DATE CollectionDate}, \texttt{DATE ExpiryDate}
+    \item \texttt{ENUM('Available','Expired','Reserved','Transfused') Status\_of\_Unit}
+    \item \texttt{CHECK (ExpiryDate > CollectionDate)}
+\end{itemize}
+
+\begin{lstlisting}
+CREATE TABLE BloodUnit(
+    UnitID         INT NOT NULL,
+    BankID         INT NOT NULL,
+    DonorID        INT NOT NULL,
+    CollectionDate DATE,
+    ExpiryDate     DATE,
+    Status_of_Unit ENUM('Available','Expired','Reserved','Transfused')
+                   DEFAULT 'Available',
+    PRIMARY KEY (UnitID, BankID),
+    CONSTRAINT FK_Bank_Unit   FOREIGN KEY (BankID)
+        REFERENCES BloodBank(BankID) ON DELETE CASCADE,
+    CONSTRAINT FK_Donor_Unit  FOREIGN KEY (DonorID)
+        REFERENCES Donor(DonorID) ON DELETE CASCADE,
+    CONSTRAINT chk_dates CHECK (ExpiryDate > CollectionDate)
+);
+\end{lstlisting}
+
+\subsubsection*{BloodInventory}
+Summary entity tracking real-time stock levels per blood type at each bank.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT BankID}, \texttt{ENUM BloodType} -- Composite PK
+    \item \texttt{INT Quantatity\_Available} (default 0)
+    \item \texttt{DATE LastUpdate}
+\end{itemize}
+
+\subsubsection*{DonationEvent}
+Captures the intersection of a Donor and a BloodBank, recording health
+metrics specific to that donation moment.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT DonationID} -- Primary Key
+    \item \texttt{INT DonorID} -- FK $\to$ Donor
+    \item \texttt{INT BankID} -- FK $\to$ BloodBank
+    \item \texttt{DATE DonationDate}
+    \item \texttt{FLOAT HemoglobinLevel}, \texttt{FLOAT Weight}
+\end{itemize}
+
+\subsubsection*{TransfusionRequest}
+The formal order placed by a Hospital on behalf of a Patient.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT RequestID} -- Primary Key
+    \item \texttt{INT HospitalID} -- FK $\to$ Hospital
+    \item \texttt{INT PatientID} -- FK $\to$ Patient
+    \item \texttt{ENUM RequiredBloodType}
+    \item \texttt{INT UnitsRequired} -- CHECK ($> 0$)
+    \item \texttt{ENUM('Low','Medium','High','Critical') UrgencyLevel}
+    \item \texttt{DATE RequestDate}
+    \item \texttt{ENUM('Pending','In Progress','Fulfilled','Cancelled') Status\_of\_Request}
+\end{itemize}
+
+\subsubsection*{TransfusionMatch}
+The final link pairing a TransfusionRequest with a specific BloodUnit.
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{INT MatchID} -- Primary Key
+    \item \texttt{INT RequestID} -- FK $\to$ TransfusionRequest
+    \item \texttt{INT BankID}, \texttt{INT UnitID} -- FK $\to$ BloodUnit
+    \item \texttt{DATE MatchDate}
+    \item \texttt{ENUM('Compatible','Incompatible','Pending') CompatibilityResult}
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\subsection{SQL Queries}
+
+The following queries demonstrate CRUD operations, JOIN operations,
+aggregate functions, and subqueries as required by the project
+guidelines.
+
+\subsubsection*{Sample INSERT Statements}
+
+\begin{lstlisting}
+-- Inserting donors
+INSERT INTO Donor VALUES
+(001, 'Abdelrahman', 'Haggag',  'Male', 'AB+', '2024-12-06', '2006-03-24'),
+(002, 'Ahmed',       'Mazhar',  'Male', 'A+',  '2024-06-02', '2004-07-29'),
+(003, 'Ahmed',       'Jabr',    'Male', 'B-',  '2023-04-25', '2005-10-06');
+
+-- Inserting donor phone numbers (multi-valued)
+INSERT INTO Donor_Phone VALUES
+(001, '+201208864464'),
+(002, '+201105487648'),
+(002, '+201058774685');  -- Donor 002 has two numbers
+
+-- Inserting hospitals
+INSERT INTO Hospital VALUES
+(001, 'Al Salam International Hospital', 'Corniche El Nil, Maadi', 'Cairo'),
+(002, 'Dar Al Fouad Hospital', '26th of July Corridor, 6th of October City', 'Giza'),
+(003, 'Andalusia Hospital Smouha', 'Smouha, Victor Emanuel Square', 'Alexandria');
+
+-- Inserting blood units
+INSERT INTO BloodUnit VALUES
+(001, 001, 001, '2026-04-15', '2026-05-27', 'Available'),
+(002, 001, 002, '2026-04-16', '2026-05-28', 'Available'),
+(003, 002, 003, '2026-03-20', '2026-05-01', 'Expired');
+
+-- Inserting transfusion requests
+INSERT INTO TransfusionRequest VALUES
+(001, 001, 001, 'A+',  2, 'High',     '2026-05-01', 'Fulfilled'),
+(002, 002, 002, 'O-',  1, 'Critical', '2026-05-02', 'Fulfilled'),
+(003, 003, 003, 'B+',  3, 'Medium',   '2026-05-03', 'In Progress');
+
+-- Inserting match results
+INSERT INTO TransfusionMatch VALUES
+(001, 001, 001, 001, '2026-05-01', 'Compatible'),
+(002, 002, 001, 002, '2026-05-01', 'Compatible'),
+(003, 003, 002, 003, '2026-05-02', 'Incompatible');
+\end{lstlisting}
+
+\subsubsection*{JOIN Query 1 -- Hospitals and Their Phone Numbers}
+
+\begin{lstlisting}
+SELECT h.HospitalName, p.PhoneNumber
+FROM Hospital h
+JOIN Hospital_Phone p ON h.HospitalID = p.HospitalID;
+\end{lstlisting}
+
+\subsubsection*{JOIN Query 2 -- Patient Requests with Hospital Names}
+
+\begin{lstlisting}
+SELECT CONCAT(p.FirstName, ' ', p.LastName) AS PatientFullName,
+       r.RequiredBloodType,
+       h.HospitalName
+FROM TransfusionRequest r
+JOIN Patient  p ON r.PatientID  = p.PatientID
+JOIN Hospital h ON r.HospitalID = h.HospitalID;
+\end{lstlisting}
+
+\subsubsection*{Aggregate Query -- Count Available Blood Units}
+
+\begin{lstlisting}
+SELECT COUNT(*) AS AvailableUnits
+FROM BloodUnit
+WHERE Status_of_Unit = 'Available';
+\end{lstlisting}
+
+\subsubsection*{Subquery -- Hospitals with Critical Urgency Requests}
+
+\begin{lstlisting}
+SELECT HospitalName
+FROM Hospital
+WHERE HospitalID IN (
+    SELECT HospitalID
+    FROM TransfusionRequest
+    WHERE UrgencyLevel = 'Critical'
+);
+\end{lstlisting}
+
+\subsubsection*{UPDATE -- Escalate Request Urgency}
+
+\begin{lstlisting}
+UPDATE TransfusionRequest
+SET    UrgencyLevel = 'Critical'
+WHERE  RequestID = 12;
+\end{lstlisting}
+
+\subsubsection*{DELETE -- Remove Cancelled Requests}
+
+\begin{lstlisting}
+DELETE FROM TransfusionRequest
+WHERE Status_of_Request = 'Cancelled';
+\end{lstlisting}
+
+% ----------------------------------------------------------------------
+\subsection{Stored Procedures, Triggers, Transactions}
+
+\subsubsection*{Stored Procedure and Transaction -- ProcessTransfusionMatch}
+
+We implemented the \texttt{ProcessTransfusionMatch} stored procedure to
+handle the critical process of matching a blood unit to a hospital
+request. This procedure uses a database transaction to enforce ACID
+properties:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Atomicity:} Three operations -- updating the
+          \texttt{BloodUnit} status, updating the
+          \texttt{TransfusionRequest} status, and inserting a record into
+          \texttt{TransfusionMatch} -- are wrapped into a single unit of
+          work.
+    \item \textbf{Safety:} If any step fails, an \texttt{EXIT HANDLER}
+          triggers a \texttt{ROLLBACK}, ensuring blood units are not
+          accidentally marked as \textit{Reserved} if the request fails
+          to update.
+    \item \textbf{Consistency:} Once all steps succeed, a \texttt{COMMIT}
+          command makes the changes permanent.
+\end{itemize}
+
+\begin{lstlisting}
+DELIMITER //
+CREATE PROCEDURE ProcessTransfusionMatch(
+    IN new_match_id      INT,
+    IN target_request_id INT,
+    IN target_unit_id    INT,
+    IN target_bank_id    INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Transaction Failed: Data rolled back due to an error.'
+            AS ErrorMessage;
+    END;
+
+    START TRANSACTION;
+
+    -- Step 1: Reserve the blood unit
+    UPDATE BloodUnit
+    SET    Status_of_Unit = 'Reserved'
+    WHERE  UnitID = target_unit_id AND BankID = target_bank_id;
+
+    -- Step 2: Update the request status
+    UPDATE TransfusionRequest
+    SET    Status_of_Request = 'In Progress'
+    WHERE  RequestID = target_request_id;
+
+    -- Step 3: Create the official match record
+    INSERT INTO TransfusionMatch
+        (MatchID, RequestID, BankID, UnitID, MatchDate, CompatibilityResult)
+    VALUES
+        (new_match_id, target_request_id, target_bank_id,
+         target_unit_id, CURDATE(), 'Compatible');
+
+    COMMIT;
+END //
+DELIMITER ;
+\end{lstlisting}
+
+\subsubsection*{Triggers}
+
+\paragraph{Validate\_Donation\_Requirements}
+A \texttt{BEFORE INSERT} trigger on \texttt{DonationEvent} that
+automatically calculates the donor's age and checks it against the
+legal donation range (18--65 years). It also verifies that haemoglobin
+levels meet medical standards (13.0 g/dL for males, 12.5 g/dL for
+females) before allowing the record to be saved.
+
+\begin{lstlisting}
+DELIMITER //
+CREATE TRIGGER Validate_Donation_Requirements
+BEFORE INSERT ON DonationEvent
+FOR EACH ROW
+BEGIN
+    DECLARE Donor_Age    INT;
+    DECLARE Donor_Gender ENUM('Male','Female');
+
+    SELECT TIMESTAMPDIFF(YEAR, DateOfBirth, CURDATE()), Gender
+    INTO   Donor_Age, Donor_Gender
+    FROM   Donor
+    WHERE  DonorID = NEW.DonorID;
+
+    IF Donor_Age < 18 OR Donor_Age > 65 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Rejected: Donor must be 18-65 years old.';
+    END IF;
+
+    IF (Donor_Gender = 'Male'   AND NEW.HemoglobinLevel < 13.0) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+            'Rejected: Male hemoglobin must be at least 13.0 g/dL.';
+    ELSEIF (Donor_Gender = 'Female' AND NEW.HemoglobinLevel < 12.5) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+            'Rejected: Female hemoglobin must be at least 12.5 g/dL.';
+    END IF;
+END //
+DELIMITER ;
+\end{lstlisting}
+
+\paragraph{After\_BloodUnit\_Insert \& After\_BloodUnit\_Delete}
+These triggers maintain a real-time blood type inventory. Every time a
+blood unit is added or removed, the \texttt{BloodInventory} table is
+automatically updated with the new quantity and the current date.
+
+\begin{lstlisting}
+DELIMITER //
+CREATE TRIGGER After_BloodUnit_Insert
+AFTER INSERT ON BloodUnit
+FOR EACH ROW
+BEGIN
+    UPDATE BloodInventory
+    SET    Quantatity_Available = Quantatity_Available + 1,
+           LastUpdate = CURDATE()
+    WHERE  BankID    = NEW.BankID
+      AND  BloodType = (SELECT BloodType FROM Donor
+                        WHERE DonorID = NEW.DonorID);
+END //
+
+CREATE TRIGGER After_BloodUnit_Delete
+AFTER DELETE ON BloodUnit
+FOR EACH ROW
+BEGIN
+    UPDATE BloodInventory
+    SET    Quantatity_Available = Quantatity_Available - 1,
+           LastUpdate = CURDATE()
+    WHERE  BankID    = OLD.BankID
+      AND  BloodType = (SELECT BloodType FROM Donor
+                        WHERE DonorID = OLD.DonorID);
+END //
+DELIMITER ;
+\end{lstlisting}
+
+\subsubsection*{Views (Derived Attributes)}
+
+\paragraph{View\_BloodUnit\_Status}
+This view provides automatic expiry tracking by comparing the
+\texttt{ExpiryDate} of each unit with the system's current date
+(\texttt{CURDATE()}) to dynamically report units as \textit{Expired}
+even if the physical table has not yet been updated.
+
+\begin{lstlisting}
+CREATE OR REPLACE VIEW View_BloodUnit_Status AS
+SELECT
+    UnitID,
+    BankID,
+    ExpiryDate,
+    Status_of_Unit AS OriginalStatus,
+    CASE
+        WHEN ExpiryDate < CURDATE() THEN 'Expired'
+        ELSE Status_of_Unit
+    END AS FinalStatus
+FROM BloodUnit;
+\end{lstlisting}
+
+% ======================================================================
+\section{Query Optimization}
+
+Efficient query execution was ensured through the following techniques:
+
+\paragraph{Indexing.}
+Primary keys (\texttt{DonorID}, \texttt{BankID}, \texttt{HospitalID},
+\texttt{RequestID}, etc.) are automatically indexed by MySQL, providing
+$O(\log n)$ lookups. Composite primary keys on tables such as
+\texttt{BloodUnit(UnitID, BankID)} and
+\texttt{BloodInventory(BankID, BloodType)} also serve as multi-column
+indexes, accelerating the most common queries -- finding available units
+of a given blood type at a specific bank.
+
+\paragraph{Query Execution Plans.}
+Running \texttt{EXPLAIN} on the critical JOIN queries confirmed that
+MySQL selects \texttt{ref} or \texttt{eq\_ref} join types on all
+indexed columns, avoiding full table scans in production-sized datasets.
+
+\paragraph{Avoiding Redundant Calculations.}
+Derived attributes (age, expiry status) are computed dynamically via
+views and triggers rather than stored as columns. This eliminates
+stale-data anomalies and removes the need to run periodic UPDATE jobs
+across large tables.
+
+\paragraph{OIFO Expiry Logic.}
+The \texttt{View\_BloodUnit\_Status} view allows the matching procedure
+to order available units by \texttt{ExpiryDate ASC}, implementing
+Oldest-In, First-Out dispatch with a single indexed sort rather than a
+complex subquery.
+
+% ======================================================================
+\section{Data Integrity and Security}
+
+% ----------------------------------------------------------------------
+\subsection{Constraints and Data Validation}
+
+Data integrity ensures that information stored in the database remains
+accurate, consistent, and reliable throughout its lifecycle. The
+following SQL integrity constraints were implemented.
+
+\paragraph{1. Primary Key (PK).}
+A Primary Key uniquely identifies every record in a table and cannot
+contain \texttt{NULL} values. In the \texttt{Donor} table,
+\texttt{DonorID} is the Primary Key, preventing duplicate donor records
+and allowing precise retrieval.
+
+\paragraph{2. Foreign Key (FK).}
+A Foreign Key creates a link between two tables and enforces referential
+integrity. In \texttt{BloodUnit}, \texttt{DonorID} references
+\texttt{Donor}, preventing the entry of a blood unit that does not
+belong to a registered donor. \texttt{ON DELETE CASCADE} ensures that
+removing a hospital automatically removes its associated phone numbers.
+
+\paragraph{3. Unique Constraint.}
+Applied to the composite primary key of \texttt{Hospital\_Phone} and
+\texttt{Bank\_Phone} to ensure the same phone number cannot be
+registered more than once for the same entity.
+
+\paragraph{4. Check Constraint (CHECK).}
+\texttt{CONSTRAINT chk\_dates CHECK (ExpiryDate > CollectionDate)}
+prevents logical errors where blood is marked as expired before it was
+collected. \texttt{CONSTRAINT chk\_Unit\_Number\_Positive CHECK (UnitsRequired > 0)}
+ensures a request must always be for at least one unit.
+
+\paragraph{5. Not Null Constraint.}
+Critical fields such as \texttt{BloodType} and \texttt{HospitalName}
+are marked \texttt{NOT NULL} because a donation or hospital record would
+be medically useless without this information.
+
+% ----------------------------------------------------------------------
+\subsection{Access Control and Security Measures}
+
+\paragraph{1. User Roles (Role-Based Access Control -- RBAC).}
+The system applies the principle of Least Privilege, ensuring users
+only access data necessary for their specific roles:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Database Administrator (DBA):} Full permissions
+          (\texttt{ALL PRIVILEGES}) to modify the schema, manage
+          backups, and create other user accounts.
+    \item \textbf{Hospital Staff:} \texttt{SELECT}, \texttt{INSERT},
+          and \texttt{UPDATE} on \texttt{TransfusionRequest} and
+          \texttt{BloodUnit}. Cannot delete records or modify donor
+          personal information.
+    \item \textbf{Medical Analyst:} \texttt{SELECT} only on specific
+          views to generate inventory and donation trend reports,
+          without accessing private patient names.
+\end{itemize}
+
+\paragraph{2. Authentication.}
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Password Complexity:} Users are required to use
+          strong, encrypted passwords.
+    \item \textbf{Account Locking:} Accounts are configured to lock
+          after a set number of failed login attempts to prevent
+          brute-force attacks.
+    \item \textbf{Connection Security:} Access is restricted to
+          specific IP addresses (e.g.\ the hospital's internal
+          network) to prevent remote unauthorised access.
+\end{itemize}
+
+\paragraph{3. Security Policies and Data Protection.}
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Data Masking via Views:} SQL Views expose blood
+          types and quantities without revealing \texttt{DonorID} or
+          national identification numbers.
+    \item \textbf{Audit Logging via Triggers:} Triggers log every
+          deletion or sensitive field update, creating an audit trail
+          of \textit{who} changed the data and \textit{when}.
+    \item \textbf{Referential Integrity:} \texttt{FOREIGN KEY}
+          constraints with \texttt{RESTRICT} or \texttt{CASCADE}
+          options prevent unauthorised or accidental deletion of parent
+          records (e.g.\ a hospital that still has active transfusion
+          requests).
+\end{itemize}
+
+% ======================================================================
+\section{Results and Discussion}
+
+% ----------------------------------------------------------------------
+\subsection{Testing and Validation}
+
+The system underwent thorough testing to ensure data accuracy and
+operational reliability:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Unit Testing:} Individual tables were tested to
+          verify constraints such as \texttt{NOT NULL} and valid
+          \texttt{ENUM} values.
+    \item \textbf{Integration Testing:} Relationships between tables
+          were validated, confirming that \texttt{FOREIGN KEY} actions
+          such as \texttt{ON DELETE CASCADE} function correctly.
+    \item \textbf{SQL Query Testing:} Data retrieval queries were
+          executed to confirm accuracy and performance.
+    \item \textbf{Validation Checks:} The trigger
+          \texttt{Validate\_Donation\_Requirements} was tested with
+          donors outside the legal age and haemoglobin ranges,
+          successfully rejecting invalid records with descriptive error
+          messages.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\subsection{Challenges and Limitations}
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Composite Primary Keys:} Managing weak entities
+          (\texttt{Patient}, \texttt{BloodUnit}) with composite keys
+          required careful foreign key definitions across multiple
+          tables.
+    \item \textbf{Trigger Ordering:} Ensuring that
+          \texttt{After\_BloodUnit\_Insert} fired correctly after the
+          donor's blood type had been committed required attention to
+          transaction isolation.
+    \item \textbf{No Front-End Interface:} The system is currently a
+          pure database layer. A web or desktop interface would be
+          required for clinical deployment.
+    \item \textbf{Compatibility Logic in Application Layer:} Full
+          ABO/Rh compatibility rules (e.g.\ O- as universal donor)
+          are not yet enforced inside the database; the current
+          \texttt{CompatibilityResult} column relies on the calling
+          application to supply the correct value.
+\end{itemize}
+
+% ======================================================================
+\section{Conclusion}
+
+This project successfully designed a comprehensive relational database
+system tailored to the operational needs of blood banks and hospitals.
+By centralising inventory management and transfusion matching processes,
+the system reduces human error and minimises blood unit wastage. A key
+finding during development was the importance of using dynamic views for
+derived attributes such as age and expiry status to maintain data
+freshness without violating 3NF.
+
+Looking ahead, the system could be expanded into a web-based platform
+to allow real-time coordination between multiple regional blood banks.
+Integration of a machine learning module to predict future blood demand
+based on historical transfusion trends is also a promising direction.
+This database foundation ensures that the blood supply chain remains
+transparent, organised, and ready for emergency situations.
+
+% ======================================================================
+\section{References}
+
+\textbf{Textbooks}
+
+\begin{itemize}[leftmargin=2em]
+    \item Elmasri, R., \& Navathe, S.\ B.\ (2015).
+          \textit{Fundamentals of database systems} (7th ed.).
+          Pearson Education.
+
+    \item DuBois, P.\ (2013).
+          \textit{MySQL} (5th ed.).
+          Addison-Wesley Professional.
+
+    \item Silberschatz, A., Korth, H.\ F., \& Sudarshan, S.\ (2019).
+          \textit{Database system concepts} (7th ed.).
+          McGraw-Hill Education.
+\end{itemize}
+
+\textbf{Software and Documentation}
+
+\begin{itemize}[leftmargin=2em]
+    \item Oracle Corporation. (2026).
+          \textit{MySQL 8.0 reference manual}.
+          \url{https://dev.mysql.com/doc/refman/8.0/en/}
+
+    \item Oracle Corporation. (2026).
+          \textit{MySQL Workbench manual}.
+          \url{https://dev.mysql.com/doc/workbench/en/}
+\end{itemize}
+
+\textbf{Project Repository}
+
+\begin{itemize}[leftmargin=2em]
+    \item Haggag, A.\ T., Mohamed, A.\ H., \& Jabr, A.\ A.\ (2026).
+          \textit{Blood Donation \& Transfusion Database System} [Source code].
+          GitHub.
+          \url{https://github.com/AbdoTarekH1/Blood-Donation-Transfusion-Database-System}
+\end{itemize}
+
+\end{document}
