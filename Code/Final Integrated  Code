@@ -1,0 +1,335 @@
+CREATE SCHEMA Blood_Donation_and_Transfusion_Database;
+USE Blood_Donation_and_Transfusion_Database;
+
+-- Created Donor table that holds Donors' information
+CREATE TABLE Donor(
+DonorID INT PRIMARY KEY NOT NULL,
+FirstName VARCHAR(30) NOT NULL,
+LastName VARCHAR(30) NOT NULL,
+Gender ENUM('Male','Female') NOT NULL,
+BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL ,
+LastDonationDate DATE NOT NULL,
+DateOfBirth DATE NOT NULL
+);
+
+-- Created Donor_Phone table that holds Donors' Phone numbers
+CREATE TABLE Donor_Phone(
+DonorID INT NOT NULL,
+Phone_Number VARCHAR(15) NOT NULL,
+
+-- This table's primary keys are a combination between DonorID and the Phone_Number 
+PRIMARY KEY (DonorID, Phone_Number),
+
+-- DonorID is a foreign key from the Donor table that helps us know which Donor we are dealing with
+CONSTRAINT FK_Donor_Phone FOREIGN KEY (DonorID) REFERENCES Donor(DonorID) ON DELETE CASCADE
+);
+
+-- Insert Donors' information to the Donor table
+INSERT INTO Donor VALUES 
+(001, 'Abdelrahman', 'Haggag', 'Male', 'AB+', '2024-12-06', '2006-03-24'),
+(002, 'Ahmed', 'Mazhar', 'Male', 'A+', '2024-6-02', '2004-07-29'),
+(003, 'Ahmed', 'Jabr', 'Male', 'B-', '2023-4-25', '2005-10-06');
+
+-- Insert Donors' Phone numbers to the Donor_Phone table
+INSERT INTO Donor_Phone VALUES
+(001, '+201208864464'),
+(002, '+201105487648'),
+(002, '+201058774685'),
+(003, '+201500587746'),
+(003, '+966556573075');
+
+-- View all the information in the Donor table
+SELECT * FROM Donor;
+
+-- View all the information in the Donor_Phone table
+SELECT * FROM Donor_Phone;
+
+-- Create the BloodBank table
+CREATE TABLE BloodBank (
+BankID INT NOT NULL,
+BankName Varchar(30) NOT NULL,
+Location varchar(40) NOT NULL,
+Address varchar(40) NOT NULL,
+City Varchar(40) NOT NULL,
+TotalCapacityUnits INT NOT NULL,
+
+PRIMARY KEY (BankID)
+
+);
+
+-- Create the Bank_Phone table for the multivalued attribute (Bank_Phone).
+CREATE TABLE Bank_Phone (
+BankID INT NOT NULL,
+PhoneNumber VARCHAR(15) NOT NULL,
+    
+-- The Primary Key is a combination of both to allow one hospital to have multiple numbers
+PRIMARY KEY (BankID, PhoneNumber),
+    
+-- Foreign Key to link back to the Hospital
+CONSTRAINT FK_Bank_Phone FOREIGN KEY (BankID) 
+	REFERENCES BloodBank(BankID) ON DELETE CASCADE
+);
+
+-- Create the Hospital table 
+
+CREATE TABLE Hospital(
+HospitalID INT NOT NULL,
+HospitalName VARCHAR(150) NOT NULL,
+Address VARCHAR(255) NOT NULL,
+City VARCHAR(100) NOT NULL,
+
+-- Assign HospitalID as Primary Key.
+
+PRIMARY KEY (HospitalID)
+
+);
+
+-- Create the Hospital_Phone table for the multivalued attribute (Hospital_Phone).
+
+CREATE TABLE Hospital_Phone (
+HospitalID INT NOT NULL,
+PhoneNumber VARCHAR(15) NOT NULL,
+    
+-- The Primary Key is a combination of both to allow one hospital to have multiple numbers
+PRIMARY KEY (HospitalID, PhoneNumber),
+    
+-- Foreign Key to link back to the Hospital
+CONSTRAINT FK_Hospital_Phone FOREIGN KEY (HospitalID) 
+	REFERENCES Hospital(HospitalID) ON DELETE CASCADE
+);
+
+	-- Create the BloodUnit table with updated constraints.
+
+CREATE TABLE BloodUnit(
+UnitID INT NOT NULL,
+BankID INT NOT NULL,
+DonorID INT NOT NULL,
+CollectionDate DATE,
+ExpiryDate Date,
+Status_of_Unit ENUM('Available', 'Expired', 'Reserved', 'Transfused') DEFAULT 'Available',
+
+-- Assign UnitID, BankID as Primary Key.
+PRIMARY KEY (UnitID , BankID),
+
+-- We have BankID , DonorID as Foreign Key.
+CONSTRAINT FK_Bank_Unit FOREIGN KEY (BankID) 
+	REFERENCES BloodBank(BankID) ON DELETE CASCADE,
+CONSTRAINT FK_Donor_Unit FOREIGN KEY (DonorID) 
+	REFERENCES Donor(DonorID) ON DELETE CASCADE,
+
+-- Ensure that the Expire is after the Collection.  
+
+CONSTRAINT chk_dates CHECK (ExpiryDate > CollectionDate)
+
+);
+
+-- Derived Attribute: Automatic Expiry Tracking (Calculated at Runtime)
+CREATE OR REPLACE VIEW View_BloodUnit_Status AS
+SELECT 
+    UnitID, 
+    BankID,
+    ExpiryDate,
+    Status_of_Unit AS OriginalStatus,
+    -- If it's physically expired, the status is 'Expired' regardless of the table column
+    -- Otherwise, it shows whatever is in the table (Available, Reserved, etc.)
+    CASE 
+        WHEN ExpiryDate < CURDATE() THEN 'Expired'
+        ELSE Status_of_Unit
+    END AS FinalStatus
+FROM BloodUnit;
+
+-- Create the BloodInventory table with updated constraints.
+CREATE TABLE BloodInventory (
+BankID INT NOT NULL,
+BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL , 
+Quantatity_Available INT DEFAULT 0,
+LastUpdate Date,
+
+PRIMARY KEY(BankID, BloodType),
+
+CONSTRAINT FK_BloodBank_Inventory FOREIGN KEY (BankID) REFERENCES BloodBank(BankID) ON DELETE CASCADE
+);
+
+DELIMITER //
+CREATE TRIGGER After_BloodUnit_Insert
+AFTER INSERT ON BloodUnit
+FOR EACH ROW
+BEGIN
+    UPDATE BloodInventory 
+    SET Quantatity_Available = Quantatity_Available + 1,
+        LastUpdate = CURDATE()
+    WHERE BankID = NEW.BankID 
+      AND BloodType = (SELECT BloodType FROM Donor WHERE DonorID = NEW.DonorID);
+END //
+DELIMITER ; 
+
+DELIMITER //
+CREATE TRIGGER After_BloodUnit_Delete
+AFTER DELETE ON BloodUnit
+FOR EACH ROW
+BEGIN
+    UPDATE BloodInventory 
+    SET Quantatity_Available = Quantatity_Available - 1,
+        LastUpdate = CURDATE()
+    WHERE BankID = OLD.BankID 
+      AND BloodType = (SELECT BloodType FROM Donor WHERE DonorID = OLD.DonorID);
+END //
+DELIMITER ;
+
+
+-- Created Patient table that holds Patients' information
+CREATE TABLE Patient(
+PatientID INT NOT NULL,
+FirstName VARCHAR(30) NOT NULL,
+LastName VARCHAR(30) NOT NULL,
+Gender ENUM('Male','Female') NOT NULL,
+BloodType ENUM('A+' , 'A-', 'B+','B-', 'AB+','AB-','O+','O-') NOT NULL ,
+DateOfBirth DATE NOT NULL,
+HospitalID INT NOT NULL,
+
+-- This table's primary keys are a combination between PatientID and the HospitalID
+PRIMARY KEY(PatientID, HospitalID),
+
+-- HospitalID is a foreign key from the Hospital table that tells us which Hospital we are dealing with
+CONSTRAINT FK_Hospital_Patient FOREIGN KEY (HospitalID) REFERENCES Hospital(HospitalID) ON DELETE CASCADE
+);
+
+-- Created Patient_Phone table that holds Patients' Phone numbers
+CREATE TABLE Patient_Phone(
+PatientID INT NOT NULL,
+HospitalID INT NOT NULL,
+Phone_Number VARCHAR(15) NOT NULL,
+
+-- This table's primary keys are a combination between DonorID and the Phone_Number
+PRIMARY KEY (PatientID, Phone_Number),
+
+-- PatientID is a foreign key from the Patient table that helps us know which Patient we are dealing with
+CONSTRAINT FK_Patient_Phone FOREIGN KEY (PatientID, HospitalID) REFERENCES Patient(PatientID, HospitalID) ON DELETE CASCADE
+);
+
+-- Insert Patients' information to the table
+INSERT INTO Patient VALUE
+(001, 'Mohamed', 'Salama', 'Male', 'AB-', '2006-08-09', 001),
+(002, 'Abdelrahman', 'Nawar', 'Male', 'B-', '2005-06-29', 002),
+(003, 'Ziad', 'Zaza', 'Male', 'O+', '2000-05-14', 004);
+
+-- Insert Patients' Phone numbers to the Patient_Phone table
+INSERT INTO Patient_Phone VALUES
+(001, 001, '+201055482144'),
+(002, 002, '+201258792604'),
+(002, 002, '+201002530648'),
+(003, 004, '+201154684884');
+
+-- View all the information in the Patient table
+SELECT * FROM Patient;
+
+-- View all the information in the Patient_Phone table
+SELECT * FROM Patient_Phone;
+
+-- Created DonationEvent table that manages all the donations' records
+CREATE TABLE DonationEvent(
+DonationID INT PRIMARY KEY NOT NULL,
+DonorID INT NOT NULL,
+
+-- DonorID is a foreign key from the Donor table that tells us which Donor we are dealing with
+CONSTRAINT FK_Donor_Donation FOREIGN KEY (DonorID) REFERENCES Donor(DonorID) ON DELETE CASCADE,
+
+BankID INT NOT NULL,
+
+-- BankID is a foreign key from the BloodBank table that tells us which Blood Bank we are dealing with
+CONSTRAINT FK_BankID_Donation FOREIGN KEY (BankID) REFERENCES BloodBank(BankID) ON DELETE CASCADE,
+
+DonationDate DATE NOT NULL,
+HemoglobinLevel FLOAT NOT NULL,
+Weight FLOAT NOT NULL
+);
+
+-- We want to check if the Donor can legally donate by checking his/her age if it is in the legal range which is between 18 and 65
+-- Also the checking the hemoglobin level if it is in the legal range which is more than 13.0 g/dL in males and 12.5 g/dL in females
+-- using a DELIMITER which gets the hemoglobin level and calcualtes the age while inserting the info in the donation event
+-- If any one of the age or the hemoglobin level is not in the legal range then it throws an error which tells us the problem we are facing
+DELIMITER //
+
+CREATE TRIGGER Validate_Donation_Requirements
+BEFORE INSERT ON DonationEvent
+FOR EACH ROW
+BEGIN
+    DECLARE Donor_Age INT;
+    DECLARE Donor_Gender ENUM('Male','Female');
+
+    -- Get donor info
+    SELECT TIMESTAMPDIFF(YEAR, DateOfBirth, CURDATE()), Gender 
+    INTO Donor_Age, Donor_Gender
+    FROM Donor
+    WHERE DonorID = NEW.DonorID;
+
+    -- Check Age (18-65)
+    IF Donor_Age < 18 OR Donor_Age > 65 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Rejected: Donor must be 18-65 years old.';
+    END IF;
+
+    -- Check Hemoglobin (based on gender)
+    IF (Donor_Gender = 'Male' AND NEW.HemoglobinLevel < 13.0) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Rejected: Male hemoglobin must be at least 13.0 g/dL.';
+    ELSEIF (Donor_Gender = 'Female' AND NEW.HemoglobinLevel < 12.5) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Rejected: Female hemoglobin must be at least 12.5 g/dL.';
+    END IF;
+    
+END //
+
+DELIMITER ;
+
+
+-- Insert Dontions' records to the table
+INSERT INTO DonationEvent VALUE
+('001', '002', '001', '1992-11-07', '24.2', '71.5'),
+('002', '001', '001', '2024-02-04', '13.6', '62.5'),
+('003', '001', '004', '2026-05-06', '22.1', '61.0'),
+('004', '003', '002', '2026-05-08', '21.0', '75.0');
+
+-- View all the records in the DonationEvent table
+SELECT * FROM DonationEvent;
+
+-- Create the TransfusionRequest table with updated constraints.
+
+CREATE TABLE TransfusionRequest(
+RequestID INT NOT NULL,
+PatientID INT NOT NULL,
+HospitalID INT NOT NULL,
+RequiredBloodType ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-') NOT NULL,
+UnitsRequired INT,
+UrgencyLevel ENUM('Low', 'Medium', 'High', 'Critical') NOT NULL,
+RequestDate DATE,
+Status_of_Request ENUM('Pending', 'In Progress', 'Fulfilled', 'Cancelled') DEFAULT 'Pending',
+
+-- Assign RequestID as Primary Key.
+PRIMARY KEY (RequestID),
+
+-- We have BankID , DonorID as Foreign Key.
+CONSTRAINT FK_Hospital_Request FOREIGN KEY (HospitalID) 
+	REFERENCES Hospital(HospitalID),
+CONSTRAINT FK_Patient_Request FOREIGN KEY (PatientID, HospitalID) 
+	REFERENCES Patient(PatientID, HospitalID),
+
+-- Data Integrity: Ensure requested units is a positive number
+CONSTRAINT chk_Unit_Number_Positive CHECK (UnitsRequired > 0)
+
+);
+
+-- Create the TransfusionMatch table with updated constraints.
+CREATE TABLE TransfusionMatch(
+MatchID INT NOT NULL,
+RequestID INT NOT NULL,
+BankID INT NOT NULL,
+UnitID INT NOT NULL,
+MatchDate Date,
+CompatibilityResult ENUM('Compatible', 'Incompatible', 'Pending') NOT NULL DEFAULT 'Pending',
+
+PRIMARY KEY (MatchID),
+
+CONSTRAINT FK_Transfusion_Request_Match FOREIGN KEY (RequestID) REFERENCES TransfusionRequest(RequestID) ON DELETE CASCADE,
+CONSTRAINT FK_Blood_Unit_Match FOREIGN KEY (UnitID, BankID) REFERENCES BloodUnit(UnitID, BankID) ON DELETE CASCADE
+);
