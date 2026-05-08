@@ -56,6 +56,21 @@ CONSTRAINT chk_dates CHECK (ExpiryDate > CollectionDate)
 
 );
 
+-- Derived Attribute: Automatic Expiry Tracking (Calculated at Runtime)
+CREATE OR REPLACE VIEW View_BloodUnit_Status AS
+SELECT 
+    UnitID, 
+    BankID,
+    ExpiryDate,
+    Status_of_Unit AS OriginalStatus,
+    -- If it's physically expired, the status is 'Expired' regardless of the table column
+    -- Otherwise, it shows whatever is in the table (Available, Reserved, etc.)
+    CASE 
+        WHEN ExpiryDate < CURDATE() THEN 'Expired'
+        ELSE Status_of_Unit
+    END AS FinalStatus
+FROM BloodUnit;
+
 -- Create the TransfusionRequest table with updated constraints.
 
 CREATE TABLE TransfusionRequest(
